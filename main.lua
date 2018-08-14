@@ -9,41 +9,75 @@ function love.load()
 		resizable = false,
 		vsync = true } )
 
+  gravityConstant = 0.5; 
+
+  floorY = 560
+
   player = {}
   player.x = 200
   player.y = 560
+  player.xVelocity = 0
+  player.yVelocity = 0
   player.width = 30
   player.height = 30
   
   
+  player.jump = function()
+    if player.y == floorY then
+      player.yVelocity = -8
+    end
+  end
+  
   
 end
 
-function love.keyreleased(key)
+function love.keypressed(key)
   -- in v0.9.2 and earlier space is represented by the actual space character ' ', so check for both
-  if (key == " " or key == "space") then
   
-  elseif (key == "escape") then
+  if (key == "escape") then
     love.event.quit()
   end
 end
+
+
 
 function love.update(dt)
   if gameOver ~= false then
     love.draw()
   end
-
+  
+  if love.keyboard.isDown("space") then
+    player.jump()
+  end
+  if love.keyboard.isDown("d") then
+    player.xVelocity = 5
+elseif love.keyboard.isDown("a") then
+    player.xVelocity = -5
+  end
+  
+  player.x = player.x + player.xVelocity
+  player.y = player.y + player.yVelocity
+  player.yVelocity = player.yVelocity + gravityConstant
+  
+  if player.y == floorY then
+    player.yVelocity = 0
+  end
+  
+  
+  player.xVelocity = 0
 end
 
 function love.draw()
   --Draws the floor
   love.graphics.setColor(1,1,1)
-  love.graphics.rectangle("fill",0,player.y + player.height,WINDOW_WIDTH,WINDOW_HEIGHT - player.y - player.height)
+  love.graphics.rectangle("fill",0,floorY ,WINDOW_WIDTH,WINDOW_HEIGHT - floorY)
   
   --Draws the Player
   love.graphics.setColor(0,1,0)
-	love.graphics.rectangle("fill",player.x,player.y,player.width,player.height)
+	love.graphics.rectangle("fill",player.x,player.y - player.height,player.width,player.height)
   
   
   
 end
+
+
