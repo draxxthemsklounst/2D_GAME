@@ -1,20 +1,44 @@
-WINDOW_WIDTH = 1280;
-WINDOW_HEIGHT = 720;
-gameOver = false;
 
 
+--TO DO
+--[[
+  make obstacle object and obstacle object array
+  make entity object and entity object array
+  make a fire function and bullet array
+]]
+
+--global constants
+  --Window
+  local WINDOW_WIDTH = 1280;
+  local WINDOW_HEIGHT = 720;
+
+  --Game Logic
+  local gameOver = false;
+  local velocityPOSITIVE = true
+  local obstacle = {}
+  local tableObstacles = {}
+  
+  --Sprite Frames
+  local playerRightFrames = {}
+  local playerLeftFrames = {}
+  local activeFrame
+  local currentFrameIndex = 1
+  local TOKEI = 0
+  
+  
 function love.load()
 	love.window.setMode(WINDOW_WIDTH,WINDOW_HEIGHT, {
 		fullscreen = false,
 		resizable = false,
 		vsync = true } )
-
+  
   love.graphics.setDefaultFilter('nearest','nearest')
   
-  
+  --environment
   gravityConstant = 0.5; 
-  floorY = 560
-
+  floorY = 700 --560
+  
+  --player "object"
   player = {}
   player.x = 200
   player.y = 560
@@ -29,10 +53,30 @@ function love.load()
       player.yVelocity = -8
     end
   end
+  --spawns random obstacle
+  obstacle:spawn()
+  
+  --idle sprite frame
+  playerRightImage = love.graphics.newImage("megamanidleRIGHT.png")
+  playerRightFrames[1] = love.graphics.newQuad(0,0,31,28,playerRightImage:getDimensions())
+  playerRightFrames[2] = love.graphics.newQuad(0,28,31,28,playerRightImage:getDimensions())
+  playerRightFrames[3]= love.graphics.newQuad(0,56,31,28,playerRightImage:getDimensions())
+  
+  playerLeftImage = love.graphics.newImage("megamanidleLEFT.png")
+  playerLeftFrames[1] = love.graphics.newQuad(0,0,31,28,playerLeftImage:getDimensions())
+  playerLeftFrames[2] = love.graphics.newQuad(0,28,31,28,playerLeftImage:getDimensions())
+  playerLeftFrames[3] = love.graphics.newQuad(0,56,31,28,playerLeftImage:getDimensions())
   
   
-  
-  
+end
+
+
+function obstacle:spawn()
+  self.y = floorY
+  self.x = 700
+  self.width = 300
+  self.height = 50
+  table.insert(self,tableObstacles)
 end
 
 function love.keypressed(key)
@@ -44,8 +88,8 @@ function love.keypressed(key)
 end
 
 
-
 function love.update(dt)
+ 
   --END CHECKER
   if gameOver ~= false then
     love.draw()
@@ -57,20 +101,41 @@ function love.update(dt)
   end
   if love.keyboard.isDown("d") then
     player.xVelocity = 5
+     velocityPOSITIVE = true
 elseif love.keyboard.isDown("a") then
     player.xVelocity = -5
+    velocityPOSITIVE = false
   end
   
   --PHYSICS UPDATE
-  player.x = player.x + player.xVelocity
-  player.y = player.y + player.yVelocity
-  player.yVelocity = player.yVelocity + gravityConstant
-  if player.y == floorY then
+  player.x = player.x + player.xVelocity -- any velocity is added to the displacement over time
+  player.y = player.y + player.yVelocity -- any velocity is added to the displacement over time
+  player.yVelocity = player.yVelocity + gravityConstant --gravity constantly present
+  if player.y >= floorY then
+    player.y = floorY
     player.yVelocity = 0
   end
   
-  --VELOCITY RESET
+  --X VELOCITY RESET (only when key is pressed)
   player.xVelocity = 0
+  
+  --SPRITE HANDLING
+  TOKEI = TOKEI + dt
+  if(TOKEI > 1) then
+    if currentFrameIndex > 3 then
+      currentFrameIndex = 1 --reset to first frame
+    elseif currentFrameIndex < 3 then
+      currentFrameIndex = currentFrameIndex + 1
+    end
+    
+    if velocityPOSITIVE == true then
+      activeFrame = playerRightFrames[currentFrameIndex]
+    elseif velocityPOSITIVE == false then
+      activeFrame = playerLeftFrames[currentFrameIndex]
+    end
+    
+    TOKEI = 0
+  end
 end
 
 function love.draw()
@@ -79,15 +144,17 @@ function love.draw()
   love.graphics.rectangle("fill",0,floorY ,WINDOW_WIDTH,WINDOW_HEIGHT - floorY)
   
   --Draws the Player
-  --love.graphics.setColor(0,0,0)
-  if player.xVelocity > 0 then
-	love.graphics.draw(player.rightSprite,player.x,player.y - player.height + 4,0,1)
-elseif player.xVelocity < 0 then
-  love.graphics.draw(player.leftSprite,player.x,player.y - player.height + 4,0,1)
-  end
+  --if velocityPOSITIVE == true then
+   -- love.graphics.draw(player.rightSprite,player.x,player.y - player.height + 4,0,1)
+  --elseif velocityPOSITIVE ~= true then
+    love.graphics.draw(activeFrame,player.x,player.y - player.height + 4,0,1)
+  --end
+  
+  --Player hitbox
   love.graphics.rectangle("line",player.x,player.y - player.height,player.width,player.height)
 
-  
+  --test obstacle
+  love.graphics.rectangle("line",700,floorY-50,300,50)
   
   
 end
