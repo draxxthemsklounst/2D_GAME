@@ -19,6 +19,9 @@
   local tableObstacles = {}
   
   --Sprite Frames
+  local playerRightImage
+  local playerLeftImage
+  local currentPlayerImage
   local playerRightFrames = {}
   local playerLeftFrames = {}
   local activeFrame
@@ -56,13 +59,15 @@ function love.load()
   --spawns random obstacle
   obstacle:spawn()
   
-  --idle sprite frame
-  playerRightImage = love.graphics.newImage("megamanidleRIGHT.png")
+  --idle sprite frame (by default start with right idle)
+  playerRightImage = love.graphics.newImage("megamanIdleRIGHT.png")
   playerRightFrames[1] = love.graphics.newQuad(0,0,31,28,playerRightImage:getDimensions())
   playerRightFrames[2] = love.graphics.newQuad(0,28,31,28,playerRightImage:getDimensions())
   playerRightFrames[3]= love.graphics.newQuad(0,56,31,28,playerRightImage:getDimensions())
+  currentPlayerImage = playerRightImage
+  activeFrame = playerRightFrames[currentFrameIndex]
   
-  playerLeftImage = love.graphics.newImage("megamanidleLEFT.png")
+  playerLeftImage = love.graphics.newImage("megamanIdleLEFT.png")
   playerLeftFrames[1] = love.graphics.newQuad(0,0,31,28,playerLeftImage:getDimensions())
   playerLeftFrames[2] = love.graphics.newQuad(0,28,31,28,playerLeftImage:getDimensions())
   playerLeftFrames[3] = love.graphics.newQuad(0,56,31,28,playerLeftImage:getDimensions())
@@ -99,12 +104,18 @@ function love.update(dt)
   if love.keyboard.isDown("space") then
     player.jump()
   end
+  
   if love.keyboard.isDown("d") then
     player.xVelocity = 5
      velocityPOSITIVE = true
-elseif love.keyboard.isDown("a") then
+     currentPlayerImage = playerRightImage
+     
+  elseif love.keyboard.isDown("a") then
     player.xVelocity = -5
     velocityPOSITIVE = false
+    currentPlayerImage = playerLeftImage
+    
+
   end
   
   --PHYSICS UPDATE
@@ -122,18 +133,18 @@ elseif love.keyboard.isDown("a") then
   --SPRITE HANDLING
   TOKEI = TOKEI + dt
   if(TOKEI > 1) then
-    if currentFrameIndex > 3 then
+    if currentFrameIndex == 3 then
       currentFrameIndex = 1 --reset to first frame
     elseif currentFrameIndex < 3 then
       currentFrameIndex = currentFrameIndex + 1
     end
     
     if velocityPOSITIVE == true then
-      activeFrame = playerRightFrames[currentFrameIndex]
-    elseif velocityPOSITIVE == false then
-      activeFrame = playerLeftFrames[currentFrameIndex]
-    end
-    
+    activeFrame = playerRightFrames[currentFrameIndex] 
+  elseif velocityPOSITIVE == false then
+    activeFrame = playerLeftFrames[currentFrameIndex] 
+  end
+  
     TOKEI = 0
   end
 end
@@ -147,7 +158,7 @@ function love.draw()
   --if velocityPOSITIVE == true then
    -- love.graphics.draw(player.rightSprite,player.x,player.y - player.height + 4,0,1)
   --elseif velocityPOSITIVE ~= true then
-    love.graphics.draw(activeFrame,player.x,player.y - player.height + 4,0,1)
+    love.graphics.draw(currentPlayerImage,activeFrame,player.x,player.y - player.height * 3,0,3)
   --end
   
   --Player hitbox
