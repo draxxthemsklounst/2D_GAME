@@ -129,6 +129,9 @@ function love.update(dt)
        velocityPOSITIVE = true
        currentPlayerImage = playerRightImage
        timeSinceInput = 0
+       if(time > 0.3) then
+         activeFrame = playerRightFrames[currentFrameIndex]
+        end
        
        
     elseif love.keyboard.isDown("a") then
@@ -136,7 +139,9 @@ function love.update(dt)
       velocityPOSITIVE = false
       currentPlayerImage = playerLeftImage
       timeSinceInput = 0
-      
+      if(time > 0.3) then
+         activeFrame = playerLeftFrames[currentFrameIndex]
+        end
 
     end
   
