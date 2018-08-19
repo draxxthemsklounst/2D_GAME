@@ -30,21 +30,12 @@
   local currentFrameIndexEnd = 3    --initialize the initial frames to the idle sprites
   local time = 0
   local timeSinceInput = 0
+  local timeSinceKeyPress 
+  local playerState
+  local spriteRate = 0.5 --the "fps"
+function createPlayer()
   
-  
-function love.load()
-	love.window.setMode(WINDOW_WIDTH,WINDOW_HEIGHT, {
-		fullscreen = false,
-		resizable = false,
-		vsync = true } )
-  
-  love.graphics.setDefaultFilter('nearest','nearest')
-  
-  --environment
-  gravityConstant = 0.5; 
-  floorY = 700 --560
-  
-  --player "object"
+   --player "object"
   player = {}
   player.x = 200
   player.y = 560
@@ -59,6 +50,25 @@ function love.load()
       player.yVelocity = -8
     end
   end
+  
+  return player
+end
+
+
+function love.load()
+	love.window.setMode(WINDOW_WIDTH,WINDOW_HEIGHT, {
+		fullscreen = false,
+		resizable = false,
+		vsync = true } )
+  
+  love.graphics.setDefaultFilter('nearest','nearest')
+  
+  --environment
+  gravityConstant = 0.5; 
+  floorY = 700 --560
+  
+  player = createPlayer()
+  
   --spawns random obstacle
   obstacle:spawn()
   
@@ -125,25 +135,36 @@ function love.update(dt)
   end
   
   if love.keyboard.isDown("d") then
+      timeSinceInput = 0
       player.xVelocity = 5
-       velocityPOSITIVE = true
-       currentPlayerImage = playerRightImage
-       timeSinceInput = 0
-       if(time > 0.3) then
-         activeFrame = playerRightFrames[currentFrameIndex]
-        end
+      velocityPOSITIVE = true
+      currentPlayerImage = playerRightImage
+      spriteRate = 0.2
+      if playerState ~= "RUNNING_RIGHT" then
+        currentFrameIndex = 4
+        currentFrameIndexBegin = 4
+        currentFrameIndexEnd = 6
+        activeFrame = playerRightFrames[currentFrameIndex]
+      end
+      playerState = "RUNNING_RIGHT"
+      
        
-       
-    elseif love.keyboard.isDown("a") then
+  elseif love.keyboard.isDown("a") then
+      timeSinceInput = 0
       player.xVelocity = -5
       velocityPOSITIVE = false
       currentPlayerImage = playerLeftImage
       timeSinceInput = 0
-      if(time > 0.3) then
-         activeFrame = playerLeftFrames[currentFrameIndex]
-        end
-
-    end
+      spriteRate = 0.2
+      if playerState ~= "RUNNING_LEFT" then
+        currentFrameIndex = 4
+        currentFrameIndexBegin = 4
+        currentFrameIndexEnd = 6
+        activeFrame = playerLeftFrames[currentFrameIndex]
+      end
+      playerState = "RUNNING_LEFT"
+      
+  end
   
   --PHYSICS UPDATE
   player.x = player.x + player.xVelocity -- any velocity is added to the displacement over time
@@ -158,10 +179,52 @@ function love.update(dt)
   player.xVelocity = 0
   
   --SPRITE HANDLING
+  
+  if timeSinceInput > 0 then
+    if playerState == "RUNNING_RIGHT" then
+      playerState = "IDLE_RIGHT"
+      currentFrameIndex = 1
+      currentFrameIndexBegin = 1
+      currentFrameIndexEnd = 3
+      activeFrame = playerRightFrames[currentFrameIndex]
+    elseif playerState == "RUNNING_LEFT" then
+      playerState = "IDLE_LEFT"
+      currentFrameIndex = 1
+      currentFrameIndexBegin = 1
+      currentFrameIndexEnd = 3
+      activeFrame = playerLeftFrames[currentFrameIndex]
+    end
+
+    spriteRate = 0.5
+    
+  end
+  
   time = time + dt
   timeSinceInput = timeSinceInput + dt
   
+  if (time > spriteRate) then
+    if currentFrameIndex == currentFrameIndexEnd then
+      currentFrameIndex = currentFrameIndexBegin
+    elseif currentFrameIndex < currentFrameIndexEnd then
+      currentFrameIndex = currentFrameIndex + 1
+    end
+    
+    if playerState == "RUNNING_RIGHT"  or playerState =="IDLE_RIGHT" then
+      activeFrame = playerRightFrames[currentFrameIndex]
+    elseif playerState == "RUNNING_LEFT" or playerState =="IDLE_LEFT" then
+      activeFrame = playerLeftFrames[currentFrameIndex]
+    else
+      activeFrame = playerRightFrames[currentFrameIndex]
+    end
+    
+    
+    
+    time = 0
+    
   
+  end
+    
+  --[[
     if love.keyboard.isDown("d") then
       
       --the start and end frames of the running sprite
@@ -177,13 +240,15 @@ function love.update(dt)
       activeFrame = playerLeftFrames[currentFrameIndex] 
       
     end
+    
     if velocityPOSITIVE == true then
       activeFrame = playerRightFrames[currentFrameIndex]
     elseif velocityPOSITIVE == false then
       activeFrame = playerLeftFrames[currentFrameIndex]
     end
     
-  if(time > 0.3) then
+    
+    if(time > 0.3) then
     
     if timeSinceInput >= 3 then --if idle for 3 seconds, idle frames will play
       if currentFrameIndex == 3 then
@@ -194,16 +259,10 @@ function love.update(dt)
     end
     time = 0
   end
+    ]]
   
-  if (time > 0.3) then
-    if currentFrameIndex == currentFrameIndexEnd then
-      currentFrameIndex = currentFrameIndexBegin
-    elseif currentFrameIndex < currentFrameIndexEnd then
-      currentFrameIndex = currentFrameIndex + 1
-    end
-    time = 0
-  end
-    
+  
+  
   
     
     
