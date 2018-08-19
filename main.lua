@@ -122,25 +122,37 @@ function love.keypressed(key)
 end
 
 
-function love.update(dt)
+  function love.update(dt)
  
-  --END CHECKER
-  if gameOver ~= false then
-    love.draw()
-  end
+    --END CHECKER
+    if gameOver ~= false then
+      love.draw()
+    end
+    
+    --PHYSICS UPDATE
+    player.x = player.x + player.xVelocity -- any velocity is added to the displacement over time
+    player.y = player.y + player.yVelocity -- any velocity is added to the displacement over time
+    player.yVelocity = player.yVelocity + gravityConstant --gravity constantly present
+    if player.y >= floorY then
+      player.y = floorY
+      player.yVelocity = 0
+    end
+    
+    --X VELOCITY RESET (only when key is pressed)
+    player.xVelocity = 0
+    
+    --KEYBOARD INPUT
+    if love.keyboard.isDown("space") then
+      player.jump()
+    end
   
-  --KEYBOARD INPUT
-  if love.keyboard.isDown("space") then
-    player.jump()
-  end
-  
-  if love.keyboard.isDown("d") then
+    if love.keyboard.isDown("d") then
       timeSinceInput = 0
       player.xVelocity = 5
       velocityPOSITIVE = true
       currentPlayerImage = playerRightImage
-      spriteRate = 0.2
-      if playerState ~= "RUNNING_RIGHT" then
+      spriteRate = 0.12
+      if playerState ~= "RUNNING_RIGHT" then --STATE CHECKER
         currentFrameIndex = 4
         currentFrameIndexBegin = 4
         currentFrameIndexEnd = 6
@@ -149,127 +161,68 @@ function love.update(dt)
       playerState = "RUNNING_RIGHT"
       
        
-  elseif love.keyboard.isDown("a") then
-      timeSinceInput = 0
-      player.xVelocity = -5
-      velocityPOSITIVE = false
-      currentPlayerImage = playerLeftImage
-      timeSinceInput = 0
-      spriteRate = 0.2
-      if playerState ~= "RUNNING_LEFT" then
-        currentFrameIndex = 4
-        currentFrameIndexBegin = 4
-        currentFrameIndexEnd = 6
+    elseif love.keyboard.isDown("a") then
+        timeSinceInput = 0
+        player.xVelocity = -5
+        velocityPOSITIVE = false
+        currentPlayerImage = playerLeftImage
+        timeSinceInput = 0
+        spriteRate = 0.12
+        if playerState ~= "RUNNING_LEFT" then --STATE CHECKER
+          currentFrameIndex = 4
+          currentFrameIndexBegin = 4
+          currentFrameIndexEnd = 6
+          activeFrame = playerLeftFrames[currentFrameIndex]
+        end
+        playerState = "RUNNING_LEFT"
+        
+    end
+  
+    
+    --IDLE CHECKER
+    if timeSinceInput > 0 then
+      if playerState == "RUNNING_RIGHT" then
+        playerState = "IDLE_RIGHT"
+        currentFrameIndex = 1
+        currentFrameIndexBegin = 1
+        currentFrameIndexEnd = 3
+        activeFrame = playerRightFrames[currentFrameIndex]
+      elseif playerState == "RUNNING_LEFT" then
+        playerState = "IDLE_LEFT"
+        currentFrameIndex = 1
+        currentFrameIndexBegin = 1
+        currentFrameIndexEnd = 3
         activeFrame = playerLeftFrames[currentFrameIndex]
       end
-      playerState = "RUNNING_LEFT"
-      
-  end
-  
-  --PHYSICS UPDATE
-  player.x = player.x + player.xVelocity -- any velocity is added to the displacement over time
-  player.y = player.y + player.yVelocity -- any velocity is added to the displacement over time
-  player.yVelocity = player.yVelocity + gravityConstant --gravity constantly present
-  if player.y >= floorY then
-    player.y = floorY
-    player.yVelocity = 0
-  end
-  
-  --X VELOCITY RESET (only when key is pressed)
-  player.xVelocity = 0
-  
-  --SPRITE HANDLING
-  
-  if timeSinceInput > 0 then
-    if playerState == "RUNNING_RIGHT" then
-      playerState = "IDLE_RIGHT"
-      currentFrameIndex = 1
-      currentFrameIndexBegin = 1
-      currentFrameIndexEnd = 3
-      activeFrame = playerRightFrames[currentFrameIndex]
-    elseif playerState == "RUNNING_LEFT" then
-      playerState = "IDLE_LEFT"
-      currentFrameIndex = 1
-      currentFrameIndexBegin = 1
-      currentFrameIndexEnd = 3
-      activeFrame = playerLeftFrames[currentFrameIndex]
-    end
 
-    spriteRate = 0.5
-    
-  end
-  
-  time = time + dt
-  timeSinceInput = timeSinceInput + dt
-  
-  if (time > spriteRate) then
-    if currentFrameIndex == currentFrameIndexEnd then
-      currentFrameIndex = currentFrameIndexBegin
-    elseif currentFrameIndex < currentFrameIndexEnd then
-      currentFrameIndex = currentFrameIndex + 1
-    end
-    
-    if playerState == "RUNNING_RIGHT"  or playerState =="IDLE_RIGHT" then
-      activeFrame = playerRightFrames[currentFrameIndex]
-    elseif playerState == "RUNNING_LEFT" or playerState =="IDLE_LEFT" then
-      activeFrame = playerLeftFrames[currentFrameIndex]
-    else
-      activeFrame = playerRightFrames[currentFrameIndex]
-    end
-    
-    
-    
-    time = 0
-    
-  
-  end
-    
-  --[[
-    if love.keyboard.isDown("d") then
-      
-      --the start and end frames of the running sprite
-      currentFrameIndexBegin = 4
-      currentFrameIndexEnd = 6
-      activeFrame = playerRightFrames[currentFrameIndex] 
-      
-    elseif love.keyboard.isDown("a") then
-      
-      --the start and end frames of the running sprite
-      currentFrameIndexBegin = 4
-      currentFrameIndexEnd = 6
-      activeFrame = playerLeftFrames[currentFrameIndex] 
+      spriteRate = 0.5
       
     end
     
-    if velocityPOSITIVE == true then
-      activeFrame = playerRightFrames[currentFrameIndex]
-    elseif velocityPOSITIVE == false then
-      activeFrame = playerLeftFrames[currentFrameIndex]
-    end
-    
-    
-    if(time > 0.3) then
-    
-    if timeSinceInput >= 3 then --if idle for 3 seconds, idle frames will play
-      if currentFrameIndex == 3 then
-        currentFrameIndex = 1 --reset to first frame
-      elseif currentFrameIndex < 3 then
+    --ANIMATION LOOP
+    time = time + dt
+    timeSinceInput = timeSinceInput + dt
+    if (time > spriteRate) then
+      if currentFrameIndex == currentFrameIndexEnd then
+        currentFrameIndex = currentFrameIndexBegin
+      elseif currentFrameIndex < currentFrameIndexEnd then
         currentFrameIndex = currentFrameIndex + 1
       end
+      
+      if playerState == "RUNNING_RIGHT"  or playerState =="IDLE_RIGHT" then
+        activeFrame = playerRightFrames[currentFrameIndex]
+      elseif playerState == "RUNNING_LEFT" or playerState =="IDLE_LEFT" then
+        activeFrame = playerLeftFrames[currentFrameIndex]
+      else
+        activeFrame = playerRightFrames[currentFrameIndex]
+      end
+    
+      time = 0
+    
     end
-    time = 0
-  end
-    ]]
   
-  
-  
-  
-    
-    
   end
   
-  
-
 
 function love.draw()
   --Draws the floor
