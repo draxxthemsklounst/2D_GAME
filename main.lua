@@ -5,6 +5,8 @@
   make obstacle object and obstacle object array
   make entity object and entity object array
   make a fire function and bullet array
+  
+  switch playerState while player is in midair change
 ]]
 
 --global constants
@@ -35,6 +37,7 @@
   local timeSinceKeyPress 
   local playerState = "IDLE_RIGHT"
   local spriteRate = 0.5 --the "fps"
+  
 function createPlayer()
   
    --player "object"
@@ -45,11 +48,9 @@ function createPlayer()
   player.yVelocity = 0
   player.width = 50
   player.height = 50
-  player.rightSprite = love.graphics.newImage('megamanRIGHT.png')
-  player.leftSprite = love.graphics.newImage('megamanLEFT.png')
   player.jump = function()
     if player.y == floorY then
-      player.yVelocity = -8
+      player.yVelocity = -16
     end
   end
   
@@ -66,14 +67,16 @@ function love.load()
   love.graphics.setDefaultFilter('nearest','nearest')
   
   --environment
-  gravityConstant = 0.5; 
-  floorY = 700 --560
+  gravityConstant = 0.7; 
+  floorY = 530
   
   player = createPlayer()
   
   --spawns random obstacle
   obstacle:spawn()
   
+  --load background image
+  backgroundImage = love.graphics.newImage("background.png")
   --load player sprites left and right
   playerRightImage = love.graphics.newImage("masterSpriteRight.png")
   playerLeftImage = love.graphics.newImage("masterSpriteLeft.png")
@@ -108,6 +111,9 @@ function love.load()
   
   --jump left
   playerLeftFrames[7] = love.graphics.newQuad(300,0,50,50,playerLeftImage:getDimensions())
+  
+  --shooting left standing
+  playerLeftFrames[8] = love.graphics.newQuad(50,100,50,50,playerLeftImage:getDimensions())
 end
 
 
@@ -180,7 +186,7 @@ end
       velocityPOSITIVE = true
       VPSTRING = "true"
       currentPlayerImage = playerRightImage
-      spriteRate = 0.12
+      spriteRate = 0.1
       
       if (playerState ~= "RUNNING_RIGHT" and player.y == floorY )then --STATE CHECKER
         currentFrameIndex = 4
@@ -199,7 +205,7 @@ end
         VPSTRING = "false"
         currentPlayerImage = playerLeftImage
         timeSinceInput = 0
-        spriteRate = 0.12
+        spriteRate = 0.1
         
         if (playerState ~= "RUNNING_LEFT" and player.y == floorY) then --STATE CHECKER
           currentFrameIndex = 4
@@ -278,10 +284,13 @@ end
   
 
 function love.draw()
+ 
   --Draws the floor
   love.graphics.setColor(1,1,1)
   love.graphics.rectangle("fill",0,floorY ,WINDOW_WIDTH,WINDOW_HEIGHT - floorY)
   
+   --Draws the background
+  love.graphics.draw(backgroundImage,0,0,0,5,3.24)
   --Draws the Player
   --if velocityPOSITIVE == true then
    -- love.graphics.draw(player.rightSprite,player.x,player.y - player.height + 4,0,1)
@@ -290,10 +299,10 @@ function love.draw()
   --end
   
   --Player hitbox
-  love.graphics.rectangle("line",player.x,player.y - player.height,player.width,player.height)
+  --love.graphics.rectangle("line",player.x,player.y - player.height,player.width,player.height)
 
   --test obstacle
-  love.graphics.rectangle("line",700,floorY-50,300,50)
+  --love.graphics.rectangle("line",700,floorY-50,300,50)
   
   --prints some variables to help debugging
   love.graphics.print("Player State: " ..playerState..
